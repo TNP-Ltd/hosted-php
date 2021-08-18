@@ -1,6 +1,6 @@
 # Adapted from wordpress image
 
-FROM php:7.4-apache
+FROM php:5.6-apache
 
 # persistent dependencies
 RUN set -eux; \
