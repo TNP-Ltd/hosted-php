@@ -107,5 +107,10 @@ RUN set -eux; \
 # (replace all instances of "%h" with "%a" in LogFormat)
 	find /etc/apache2 -type f -name '*.conf' -exec sed -ri 's/([[:space:]]*LogFormat[[:space:]]+"[^"]*)%h([^"]*")/\1%a\2/g' '{}' +
 
+# Turn off signatures
+RUN sed -i "s/^expose_php.*/expose_php = off/" $PHP_INI_DIR/php.ini
+RUN sed -i "s/^ServerTokens.*/ServerTokens Prod/" /etc/apache2/conf-enabled/security.conf
+RUN sed -i "s/^ServerSignature.*/ServerSignature Off/" /etc/apache2/conf-enabled/security.conf
+
 RUN curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp
 RUN chmod +x /usr/local/bin/wp
