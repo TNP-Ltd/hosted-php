@@ -113,5 +113,8 @@ RUN sed -i "s/^expose_php.*/expose_php = off/" $PHP_INI_DIR/php.ini
 RUN sed -i "s/^ServerTokens.*/ServerTokens Prod/" /etc/apache2/conf-enabled/security.conf
 RUN sed -i "s/^ServerSignature.*/ServerSignature Off/" /etc/apache2/conf-enabled/security.conf
 
+# Enable Backwards Compatible options
+RUN sed -i "s/^short_open_tag.*/short_open_tag = On/" $PHP_INI_DIR/php.ini
+
 RUN curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp
 RUN chmod +x /usr/local/bin/wp
