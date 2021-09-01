@@ -42,6 +42,7 @@ RUN set -ex; \
 		mysqli \
         pgsql \
 		zip \
+        sockets \
 	; \
 # https://pecl.php.net/package/imagick
 	pecl install imagick-3.5.0; \
