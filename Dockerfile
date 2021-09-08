@@ -115,6 +115,7 @@ RUN sed -i "s/^ServerSignature.*/ServerSignature Off/" /etc/apache2/conf-enabled
 
 # Increase max upload size
 RUN sed -i "s/^upload_max_filesize.*/upload_max_filesize = 50M/" $PHP_INI_DIR/php.ini
+RUN sed -i "s/^post_max_size.*/post_max_size = 50M/" $PHP_INI_DIR/php.ini
 
 # Enable Backwards Compatible options
 RUN sed -i "s/^short_open_tag.*/short_open_tag = On/" $PHP_INI_DIR/php.ini
