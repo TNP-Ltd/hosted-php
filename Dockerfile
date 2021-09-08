@@ -113,6 +113,9 @@ RUN sed -i "s/^expose_php.*/expose_php = off/" $PHP_INI_DIR/php.ini
 RUN sed -i "s/^ServerTokens.*/ServerTokens Prod/" /etc/apache2/conf-enabled/security.conf
 RUN sed -i "s/^ServerSignature.*/ServerSignature Off/" /etc/apache2/conf-enabled/security.conf
 
+# Increase max upload size
+RUN sed -i "s/^upload_max_filesize.*/upload_max_filesize = 50M/" $PHP_INI_DIR/php.ini
+
 # Enable Backwards Compatible options
 RUN sed -i "s/^short_open_tag.*/short_open_tag = On/" $PHP_INI_DIR/php.ini
 
