@@ -116,6 +116,7 @@ RUN sed -i "s/^ServerSignature.*/ServerSignature Off/" /etc/apache2/conf-enabled
 
 # Increase max upload size
 RUN sed -i "s/^upload_max_filesize.*/upload_max_filesize = 50M/" $PHP_INI_DIR/php.ini
+RUN sed -i "s/^post_max_size.*/post_max_size = 50M/" $PHP_INI_DIR/php.ini
 
 RUN curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp
 RUN chmod +x /usr/local/bin/wp
