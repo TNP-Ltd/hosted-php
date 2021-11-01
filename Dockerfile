@@ -120,5 +120,8 @@ RUN sed -i "s/^post_max_size.*/post_max_size = 50M/" $PHP_INI_DIR/php.ini
 # Enable Backwards Compatible options
 RUN sed -i "s/^short_open_tag.*/short_open_tag = On/" $PHP_INI_DIR/php.ini
 
+# Tune down resource usage
+COPY conf/mpm_prefork.conf  /etc/apache2/mods-enabled/mpm_prefork.conf
+
 RUN curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp
 RUN chmod +x /usr/local/bin/wp
