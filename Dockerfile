@@ -25,6 +25,7 @@ RUN set -ex; \
 		libfreetype6-dev \
 		libjpeg-dev \
 		libmagickwand-dev \
+		libmcrypt-dev \
 		libpng-dev \
         libpq-dev  \
 		libzip-dev \
@@ -39,6 +40,7 @@ RUN set -ex; \
         curl \
 		exif \
 		gd \
+        mcrypt \
 		mysqli \
         pgsql \
 		zip \
