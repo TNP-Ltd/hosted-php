@@ -127,3 +127,4 @@ COPY conf/mpm_prefork.conf  /etc/apache2/mods-enabled/mpm_prefork.conf
 
 RUN curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp
 RUN chmod +x /usr/local/bin/wp
+RUN php -v
