@@ -43,6 +43,7 @@ RUN set -ex; \
         mcrypt \
 		mysqli \
         pgsql \
+	pdo_mysql \
 		zip \
 	; \
 # https://pecl.php.net/package/imagick
