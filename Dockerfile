@@ -41,6 +41,7 @@ RUN set -ex; \
 		gd \
 		mysqli \
         pgsql \
+	pdo_mysql \
 		zip \
         sockets \
 	; \
