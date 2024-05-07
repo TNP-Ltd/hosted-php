@@ -1,8 +1,25 @@
-# Adapted from wordpress image
+FROM debian:bookworm-slim
 
-FROM php:5.6-apache
+ENV PHP_INI_DIR /etc/php/5.6/apache2
+ENV APACHE_CONFDIR /etc/apache2
 
-# persistent dependencies
+COPY sury-repo.asc /etc/apt/keyrings/sury-repo.asc
+
+# install php5.6
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+		ca-certificates \
+		curl \
+	; \
+	echo "deb [signed-by=/etc/apt/keyrings/sury-repo.asc] https://packages.sury.org/php/ bookworm main" > /etc/apt/sources.list.d/php-sury.list ; \
+	apt-get update; \
+	apt install -y  \
+		php5.6 \
+	; \
+	rm -rf /var/lib/apt/lists/*
+
+# persistent / runtime deps
 RUN set -eux; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
@@ -10,18 +27,8 @@ RUN set -eux; \
 		ghostscript \
 # wp-cli depdencies..
         mariadb-client \
-        less        \
-	; \
-	rm -rf /var/lib/apt/lists/*
-
-# install the PHP extensions we need (https://make.wordpress.org/hosting/handbook/handbook/server-environment/#php-extensions)
-RUN set -ex; \
-	\
-	savedAptMark="$(apt-mark showmanual)"; \
-	\
-	apt-get update; \
-	apt-get install -y --no-install-recommends \
-        libcurl4-gnutls-dev \
+        less \
+		libcurl4-gnutls-dev \
 		libfreetype6-dev \
 		libjpeg-dev \
 		libmagickwand-dev \
@@ -30,53 +37,39 @@ RUN set -ex; \
         libpq-dev  \
 		libzip-dev \
 	; \
-	\
-	docker-php-ext-configure gd \
-		--with-freetype \
-		--with-jpeg \
+	rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+	apt update ; \
+	apt install --no-install-recommends -y \
+		php5.6-bcmath \
+        php5.6-curl \
+		php5.6-readline \
+		php5.6-exif \
+		php5.6-gd \
+		php5.6-imagick \
+		php5.6-json \
+        php5.6-mcrypt \
+		php5.6-mysqli \
+		php5.6-opcache \
+        php5.6-pdo \
+        php5.6-pgsql \
+        php5.6-mysql \
+		php5.6-zip \
 	; \
-	docker-php-ext-install -j "$(nproc)" \
-		bcmath \
-        curl \
-		exif \
-		gd \
-        mcrypt \
-		mysqli \
-        pgsql \
-	pdo_mysql \
-		zip \
-	; \
-# https://pecl.php.net/package/imagick
-	pecl install imagick-3.5.0; \
-	docker-php-ext-enable imagick; \
-	rm -r /tmp/pear; \
-	\
-# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
-	apt-mark auto '.*' > /dev/null; \
-	apt-mark manual $savedAptMark; \
-	ldd "$(php -r 'echo ini_get("extension_dir");')"/*.so \
-		| awk '/=>/ { print $3 }' \
-		| sort -u \
-		| xargs -r dpkg-query -S \
-		| cut -d: -f1 \
-		| sort -u \
-		| xargs -rt apt-mark manual; \
-	\
-	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
 	rm -rf /var/lib/apt/lists/*
 
 # set recommended PHP.ini settings
 # see https://secure.php.net/manual/en/opcache.installation.php
-RUN set -eux; \
-	docker-php-ext-enable opcache; \
-	{ \
+RUN { \
 		echo 'opcache.memory_consumption=128'; \
 		echo 'opcache.interned_strings_buffer=8'; \
 		echo 'opcache.max_accelerated_files=4000'; \
 		echo 'opcache.revalidate_freq=2'; \
 		echo 'opcache.fast_shutdown=1'; \
-	} > /usr/local/etc/php/conf.d/opcache-recommended.ini
+	} > $PHP_INI_DIR/conf.d/opcache-recommended.ini
 # https://wordpress.org/support/article/editing-wp-config-php/#configure-error-logging
+
 RUN { \
 # https://www.php.net/manual/en/errorfunc.constants.php
 # https://github.com/docker-library/wordpress/issues/420#issuecomment-517839670
@@ -89,7 +82,7 @@ RUN { \
 		echo 'ignore_repeated_errors = On'; \
 		echo 'ignore_repeated_source = Off'; \
 		echo 'html_errors = Off'; \
-	} > /usr/local/etc/php/conf.d/error-logging.ini
+	} > $PHP_INI_DIR/conf.d/error-logging.ini
 
 RUN set -eux; \
 	a2enmod rewrite expires; \
@@ -110,8 +103,11 @@ RUN set -eux; \
 # (replace all instances of "%h" with "%a" in LogFormat)
 	find /etc/apache2 -type f -name '*.conf' -exec sed -ri 's/([[:space:]]*LogFormat[[:space:]]+"[^"]*)%h([^"]*")/\1%a\2/g' '{}' +
 
+RUN ln -sfT /dev/stderr "/var/log/apache2/error.log"; \
+	ln -sfT /dev/stdout "/var/log/apache2/access.log"; \
+	ln -sfT /dev/stdout "/var/log/apache2/other_vhosts_access.log";
+
 # Turn off signatures
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 RUN sed -i "s/^expose_php.*/expose_php = off/" $PHP_INI_DIR/php.ini
 RUN sed -i "s/^ServerTokens.*/ServerTokens Prod/" /etc/apache2/conf-enabled/security.conf
 RUN sed -i "s/^ServerSignature.*/ServerSignature Off/" /etc/apache2/conf-enabled/security.conf
@@ -123,9 +119,14 @@ RUN sed -i "s/^post_max_size.*/post_max_size = 50M/" $PHP_INI_DIR/php.ini
 # Enable Backwards Compatible options
 RUN sed -i "s/^short_open_tag.*/short_open_tag = On/" $PHP_INI_DIR/php.ini
 
+# Apache + PHP requires preforking Apache for best results
+RUN a2dismod mpm_event && a2enmod mpm_prefork
+
 # Tune down resource usage
 COPY conf/mpm_prefork.conf  /etc/apache2/mods-enabled/mpm_prefork.conf
 
-RUN curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp
-RUN chmod +x /usr/local/bin/wp
-RUN php -v
+RUN curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp \
+	&& chmod +x /usr/local/bin/wp
+
+EXPOSE 80
+CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
