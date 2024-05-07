@@ -2,6 +2,7 @@ FROM debian:bookworm-slim
 
 ENV PHP_INI_DIR /etc/php/5.6/apache2
 ENV APACHE_CONFDIR /etc/apache2
+ENV APACHE_ENVVARS $APACHE_CONFDIR/envvars
 
 COPY sury-repo.asc /etc/apt/keyrings/sury-repo.asc
 
@@ -11,7 +12,46 @@ RUN set -eux; \
 	apt-get install -y --no-install-recommends \
 		ca-certificates \
 		curl \
-	; \
+	;
+
+# install apache2
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends apache2; \
+	rm -rf /var/lib/apt/lists/*; \
+	# generically convert lines like
+	#   export APACHE_RUN_USER=www-data
+	# into
+	#   : ${APACHE_RUN_USER:=www-data}
+	#   export APACHE_RUN_USER
+	# so that they can be overridden at runtime ("-e APACHE_RUN_USER=...")
+	sed -ri 's/^export ([^=]+)=(.*)$/: ${\1:=\2}\nexport \1/' "$APACHE_ENVVARS"; \
+	\
+	# setup directories and permissions
+	. "$APACHE_ENVVARS"; \
+	for dir in \
+		"$APACHE_LOCK_DIR" \
+		"$APACHE_RUN_DIR" \
+		"$APACHE_LOG_DIR" \
+	# https://salsa.debian.org/apache-team/apache2/-/commit/b97ca8714890ead1ba6c095699dde752e8433205
+		"$APACHE_RUN_DIR/socks" \
+	; do \
+		rm -rvf "$dir"; \
+		mkdir -p "$dir"; \
+		chown "$APACHE_RUN_USER:$APACHE_RUN_GROUP" "$dir"; \
+	# allow running as an arbitrary user (https://github.com/docker-library/php/issues/743)
+		chmod 1777 "$dir"; \
+	done; \
+	# delete the "index.html" that installing Apache drops in here
+	rm -rvf /var/www/html/*; \
+	# logs should go to stdout / stderr
+	ln -sfT /dev/stderr "/var/log/apache2/error.log"; \
+	ln -sfT /dev/stdout "/var/log/apache2/access.log"; \
+	ln -sfT /dev/stdout "/var/log/apache2/other_vhosts_access.log";
+
+
+# # add sury repo and install php5.6
+RUN set -eux; \
 	echo "deb [signed-by=/etc/apt/keyrings/sury-repo.asc] https://packages.sury.org/php/ bookworm main" > /etc/apt/sources.list.d/php-sury.list ; \
 	apt-get update; \
 	apt install -y  \
@@ -102,10 +142,6 @@ RUN set -eux; \
 # https://github.com/docker-library/wordpress/issues/383#issuecomment-507886512
 # (replace all instances of "%h" with "%a" in LogFormat)
 	find /etc/apache2 -type f -name '*.conf' -exec sed -ri 's/([[:space:]]*LogFormat[[:space:]]+"[^"]*)%h([^"]*")/\1%a\2/g' '{}' +
-
-RUN ln -sfT /dev/stderr "/var/log/apache2/error.log"; \
-	ln -sfT /dev/stdout "/var/log/apache2/access.log"; \
-	ln -sfT /dev/stdout "/var/log/apache2/other_vhosts_access.log";
 
 # Turn off signatures
 RUN sed -i "s/^expose_php.*/expose_php = off/" $PHP_INI_DIR/php.ini
