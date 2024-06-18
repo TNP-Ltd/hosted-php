@@ -96,6 +96,7 @@ RUN set -eux; \
         php5.6-pgsql \
         php5.6-mysql \
 		php5.6-zip \
+		php5.6-mbstring \
 	; \
 	rm -rf /var/lib/apt/lists/*
 
