@@ -23,27 +23,31 @@ RUN set -ex; \
 	apt-get install -y --no-install-recommends \
         libcurl4-gnutls-dev \
 		libfreetype6-dev \
+		libicu-dev \
 		libjpeg-dev \
 		libmagickwand-dev \
 		libpng-dev \
-        libpq-dev  \
+		libwebp-dev \
+	        libpq-dev  \
 		libzip-dev \
 	; \
 	\
 	docker-php-ext-configure gd \
 		--with-freetype \
 		--with-jpeg \
+		--with-webp \
 	; \
 	docker-php-ext-install -j "$(nproc)" \
 		bcmath \
-        curl \
+	        curl \
 		exif \
 		gd \
+		intl \
 		mysqli \
-        pgsql \
-	pdo_mysql \
+	        pgsql \
+		pdo_mysql \
 		zip \
-        sockets \
+        	sockets \
 	; \
 # https://pecl.php.net/package/imagick
 	pecl install imagick-3.6.0; \
