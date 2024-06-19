@@ -97,6 +97,8 @@ RUN set -eux; \
         php5.6-mysql \
 		php5.6-zip \
 		php5.6-mbstring \
+		php5.6-xml \
+		php5.6-tokenizer \
 	; \
 	rm -rf /var/lib/apt/lists/*
 
