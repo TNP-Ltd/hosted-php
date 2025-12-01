@@ -1,6 +1,6 @@
 # Adapted from wordpress image
 
-FROM php:8.2-apache
+FROM php:8.3-apache
 
 # persistent dependencies
 RUN set -eux; \
