@@ -1,6 +1,6 @@
 # Adapted from wordpress image
 
-FROM php:8.1-apache
+FROM php:8.2-apache
 
 # persistent dependencies
 RUN set -eux; \
@@ -50,7 +50,7 @@ RUN set -ex; \
         	sockets \
 	; \
 # https://pecl.php.net/package/imagick
-	pecl install imagick-3.6.0; \
+	pecl install imagick-3.8.0; \
 	docker-php-ext-enable imagick; \
 	rm -r /tmp/pear; \
 	\
