@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ENV PHP_INI_DIR /etc/php/5.6/apache2
 ENV APACHE_CONFDIR /etc/apache2
@@ -52,7 +52,7 @@ RUN set -eux; \
 
 # # add sury repo and install php5.6
 RUN set -eux; \
-	echo "deb [signed-by=/etc/apt/keyrings/sury-repo.asc] https://packages.sury.org/php/ bookworm main" > /etc/apt/sources.list.d/php-sury.list ; \
+	echo "deb [signed-by=/etc/apt/keyrings/sury-repo.asc] https://packages.sury.org/php/ trixie main" > /etc/apt/sources.list.d/php-sury.list ; \
 	apt-get update; \
 	apt install -y  \
 		php5.6 \
